@@ -9,30 +9,31 @@ const MongoClient=require('mongodb').MongoClient;
 const assert=require('assert');
 const url='mongodb://localhost:27017/';
 const dbname='hospitalmanagementsystem';
-var db;
+let db;
 MongoClient.connect(url,{ useUnifiedTopology: true },(err,client)=>{
     assert.equal(null,err);
-    var db=client.db(dbname);
+    db=client.db(dbname);
     console.log(`connected to database: ${url}`);
     console.log(`Database : ${dbname}`);
+});
 app.get('/hospitaldetails',middleware.checkToken,(req,res)=>
 {
     console.log("fetching data from database");
-    db.collection('hospital').find().toArray().then(result =>res.json(result));
+    var data=db.collection('hospital').find().toArray().then(result =>res.json(result));
 });
 app.get('/ventilatordetails',middleware.checkToken,(req,res)=>{
     console.log("fetching ventilator details");
-    db.collection('ventilator1').find().toArray().then(result=>res.json(result));
+    var ventilatordetails=db.collection('ventilator1').find().toArray().then(result=>res.json(result));
 });
-app.post('/searcheventbystatus',middleware.checkToken,(res,req)=>{
+app.post('/searcheventbystatus',middleware.checkToken,(req,res)=>{
     var status=req.body.status;
     console.log(status);
-    db.collection('ventilator1').find({"status": status}).toArray().then(result=>res.json(result));
+    var data=db.collection('ventilator1').find({'status':status}).toArray().then(result=>res.json(result));
 });
 app.post('/searcheventbyname',middleware.checkToken,(req,res)=>{
     var name=req.query.name;
     console.log(name);
-    db.collection('ventilator1').find({"name":new RegExp("name",i)}).toArray().then(result =>res.json(result));
+    var data=db.collection('ventilator1').find({"name":new RegExp(name,'i')}).toArray().then(result =>res.json(result));
 });
 app.delete('/delete',middleware.checkToken,(req,res)=>{
     var myquery=req.query.ventilatorid;
@@ -42,7 +43,8 @@ app.delete('/delete',middleware.checkToken,(req,res)=>{
         if(err) throw err;
         res.json("1 document deleted");
     });
-    app.post('/addventilatorbyuser',middleware.checkToken,(req,res)=>{
+});
+app.post('/addventilatorbyuser',middleware.checkToken,(req,res)=>{
         var hid=req.body.hid;
         var ventilatorid=req.body.ventilatorid;
         var status=req.body.status;
@@ -53,18 +55,16 @@ app.delete('/delete',middleware.checkToken,(req,res)=>{
         db.collection('ventilator1').insertOne(item,function(err,result){
             res.json('item is inserted');
         });
-    });
 
 });
 app.put('/updateventilatordetails',middleware.checkToken,(req,res)=>{
     var ventid={ventilatorid:req.body.ventilatorid};
     console.log(ventid);
     var newvalues={$set:{status:req.body.status}};
-    db.collection('ventilator1').updateone(ventid,newvalues,function(err,result){
+    db.collection('ventilator1').updateOne(ventid,newvalues,function(err,result){
         res.json("1 document updated");
         if(err) throw err;
     });
-});
 });
 app.listen(4000,(err,result)=>{
     console.log(`server is listening`);
